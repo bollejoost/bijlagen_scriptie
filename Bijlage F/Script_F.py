@@ -1,3 +1,9 @@
+#################################################################################
+#   Dit script is gebruikt om de survey-data te mergen met de TikTok-data       #
+#                                                                               #
+#################################################################################
+
+
 import pandas as pd
 import json
 import glob
@@ -29,13 +35,13 @@ def merge_tiktok_and_survey(json_folder, qualtrics_csv_path):
 
     tiktok_df = pd.DataFrame(all_respondents)
 
-    # 2. Laad Qualtrics data (we skippen de 2 metadata rijen van Qualtrics)
+    # Laad Qualtrics data (we skippen de 2 metadata rijen van Qualtrics)
     survey_df = pd.read_csv(qualtrics_csv_path, low_memory=False).iloc[2:]
 
-    # 3. Voer de Inner Join uit op de ID's
+    # Voer de Inner Join uit op de ID's
     master_df = pd.merge(tiktok_df, survey_df, left_on="Respondent_ID", right_on="ResponseId", how="inner")
     
-    # 4. Gevoelige data verwijderen (Email Q18)
+    # Gevoelige data verwijderen (Email Q18)
     if 'Q18' in master_df.columns:
         master_df = master_df.drop(columns=['Q18'])
     
