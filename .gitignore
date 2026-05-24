@@ -1,4 +1,7 @@
-processed_*.json
-*.csv
-*.pkl
-*.zip
+**/scriptie-datadonatie-2025/
+**/R_*_tiktok_data.json
+**/respondentendata/
+**/processed_data/
+**/.DS_Store
+.DS_Store
+

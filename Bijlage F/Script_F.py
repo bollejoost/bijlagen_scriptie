@@ -6,18 +6,23 @@ import os
 def merge_tiktok_and_survey(json_folder, qualtrics_csv_path):
     all_respondents = []
     
-    # 1. Verzamel data uit alle 'processed_*.json' bestanden
+    # verzamel data uit alle 'processed_*.json' bestanden
     json_files = glob.glob(os.path.join(json_folder, "processed_*.json"))
     for file_path in json_files:
         with open(file_path, 'r') as f:
             data = json.load(f)
-            # Filter selective_exposure video's eruit voor de algoritmische analyse
-            scores = [v['ideological_score'] for v in data['Watch_History'] if v.get('selective_exposure') is False]
+            
+            # Alleen respondenten met 10000 of meer video's ---
+            total_videos = data.get('derived_variables', {}).get("total_videos", 0)
+            if total_videos < 10000:
+                continue 
+            
+            scores = [v['ideological_score'] for v in data.get('Watch_History', [])]
             
             all_respondents.append({
                 "Respondent_ID": data.get("Respondent_ID"),
-                "total_videos": data['derived_variables'].get("total_videos"),
-                "usage_intensity": data['derived_variables'].get("usage_intensity"),
+                "total_videos": total_videos,
+                "usage_intensity": data.get('derived_variables', {}).get("usage_intensity"),
                 "pol_video_count": len(scores),
                 "pol_video_scores": scores 
             })
@@ -36,10 +41,19 @@ def merge_tiktok_and_survey(json_folder, qualtrics_csv_path):
     
     # Tussenstand opslaan
     master_df.to_pickle("master_intermediate.pkl")
-    print(f"Koppeling gelukt! {len(master_df)} studenten in de dataset.")
+    print(f"Koppeling gelukt! {len(master_df)} studenten met 5000+ video's in de dataset.")
+    
     return master_df
 
-# de . grijpt alle JSON files die beginnen met "processed_" in de huidige directory
-# en qualtrics_data.csv is het bestand met de survey data
 if __name__ == "__main__":
-    merge_tiktok_and_survey(".", "qualtrics_data.csv")
+    # --- CONFIGURATIE ---
+    # Zorg dat de map en het CSV bestand de juiste naam hebben
+    df = merge_tiktok_and_survey("processed_data", "TikTok+Datadonatie_April+17,+2026_08.49.csv")
+    
+    if df is not None:
+        print("\n--- CONTROLE PICKLE BESTAND ---")
+        controle_df = pd.read_pickle("master_intermediate.pkl")
+        aantal_rijen, aantal_kolommen = controle_df.shape
+        print(f"✅ Het pickle bestand is succesvol geladen.")
+        print(f"📊 Aantal studenten/respondenten (rijen): {aantal_rijen}")
+        print(f"📈 Aantal variabelen/vragen (kolommen): {aantal_kolommen}")
